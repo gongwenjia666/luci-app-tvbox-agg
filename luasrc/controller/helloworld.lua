@@ -1,5 +1,9 @@
-module("luci.controller.helloworld", package.seeall)
+m = Map("helloworld", "Hello World", "OpenWrt 25.x APK Demo")
 
-function index()
-    entry({"admin", "system", "helloworld"}, cbi("helloworld"), _("HelloWorld"), 99)
-end
+s = m:section(TypedSection, "test")
+s.anonymous = true
+
+o = s:option(DummyValue, "_tip", "Message")
+o.default = "✅ Hello World from OpenWrt APK!"
+
+return m

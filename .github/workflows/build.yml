@@ -1,40 +1,42 @@
-name: 编译 Hello World 插件
+name: Build OpenWrt APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-22.04
     steps:
-    - name:  Checkout
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: 安装依赖
-      run: sudo apt update && sudo apt install build-essential clang flex bison gawk gcc-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget -y
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential clang flex bison gawk gcc-multilib \
+            gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip \
+            zlib1g-dev file wget
 
-    - name: 下载 OpenWrt SDK
-      run: |
-        git clone https://github.com/openwrt/openwrt -b openwrt-23.05 openwrt
-        cd openwrt
-        ./scripts/feeds update -a
-        ./scripts/feeds install luci
+      - name: Clone OpenWrt Snapshot (25.x, APK)
+        run: |
+          git clone --depth 1 https://git.openwrt.org/openwrt/openwrt.git openwrt
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install luci
 
-    - name: 复制插件到 package
-      run: |
-        cp -r ../luci-app-hello openwrt/package/
+      - name: Copy package
+        run: |
+          cp -r $GITHUB_WORKSPACE/luci-app-helloworld openwrt/package/
 
-    - name: 配置编译
-      run: |
-        cd openwrt
-        make menuconfig
-        make package/luci-app-hello/compile V=s -j$(nproc)
+      - name: Config & build
+        run: |
+          cd openwrt
+          echo "CONFIG_PACKAGE_luci-app-helloworld=m" > .config
+          make defconfig
+          make package/luci-app-helloworld/compile V=s -j$(nproc)
 
-    - name: 上传 ipk 成果
-      uses: actions/upload-artifact@v4
-      with:
-        name: luci-app-hello-ipk
-        path: openwrt/bin/packages/*/luci/luci-app-hello_*.ipk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: luci-app-helloworld-apk
+          path: openwrt/bin/packages/*/luci/luci-app-helloworld_*.apk
