@@ -26,7 +26,8 @@ jobs:
 
       - name: Copy package
         run: |
-          cp -r $GITHUB_WORKSPACE openwrt/package/luci-app-tvbox-agg
+          mkdir -p openwrt/package/luci-app-tvbox-agg
+          cp -r ./* openwrt/package/luci-app-tvbox-agg/
 
       - name: Config & build
         run: |
